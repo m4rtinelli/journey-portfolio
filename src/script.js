@@ -34,7 +34,6 @@ const scene = new THREE.Scene();
 const textureLoader = new THREE.TextureLoader();
 const gradientTexture = textureLoader.load("textures/gradients/3.jpg");
 gradientTexture.magFilter = THREE.NearestFilter;
-//Material
 //env Map
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 
@@ -46,24 +45,30 @@ const environmentMapTexture = cubeTextureLoader.load([
   "/textures/envMap/pz.png",
   "/textures/envMap/nz.png",
 ]);
+//Materials
 
 //mat2
 const material2 = new THREE.MeshPhysicalMaterial({
   color: 0xffffff,
   transparent: true,
-  opacity: 7,
+  opacity: 3,
   roughness: 0.1,
-  metalness: 0.3,
+  metalness: 0.0,
   clearcoat: 1.0,
   clearcoatRoughness: 0.5,
   transmission: 1.0,
   envMap: environmentMapTexture,
-  envMapIntensity: 5.0,
+  envMapIntensity: 1.0,
+  //   wireframe: true,
 });
 
 material2.depthTest = true;
 material2.depthWrite = false;
 material2.renderOrder = 1;
+
+//mat3
+
+//mat4
 
 const material = new THREE.MeshToonMaterial({
   color: parameters.materialColor,
@@ -75,7 +80,7 @@ const objectsDistance = 4;
 
 const mesh1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.4, 16, 60), material);
 
-const mesh2 = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 32), material2);
+const mesh2 = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), material2);
 
 const mesh3 = new THREE.Mesh(
   new THREE.TorusKnotGeometry(0.8, 0.35, 100, 16),
@@ -231,6 +236,32 @@ window.addEventListener("mousemove", (event) => {
 /**
  * Animate
  */
+const updateBlobGeometry = (geometry, elapsedTime) => {
+  const { attributes } = geometry;
+
+  if (attributes) {
+    const positions = attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const y = positions[i + 1];
+      const z = positions[i + 2];
+
+      const noise =
+        Math.sin(x * 0.3 + elapsedTime * 0.02) +
+        Math.sin(y * 0.5 + elapsedTime * 0.03) +
+        Math.sin(z * 0.7 + elapsedTime * 0.05) * 0.01;
+
+      const displacement = noise * 0.0005; // Reduzido o fator de escala para tornar o efeito mais lento
+
+      positions[i + 0] = x;
+      positions[i + 1] = y - displacement;
+      positions[i + 2] = z + displacement;
+    }
+
+    attributes.position.needsUpdate = true;
+  }
+};
+
 const clock = new THREE.Clock();
 // let previousTime = 0;
 
@@ -249,6 +280,10 @@ const tick = () => {
   cameraGroup.position.y +=
     (parallaxY - cameraGroup.position.y) * 3 * deltaTime;
 
+  // Update blob geometry
+  if (mesh2.geometry) {
+    updateBlobGeometry(mesh2.geometry, elapsedTime);
+  }
   //Update Meshes
   for (const mesh of sectionMeshes) {
     mesh.rotation.x += deltaTime * 0.1;
