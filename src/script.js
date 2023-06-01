@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import * as dat from "lil-gui";
+import gsap from "gsap";
 
 /**
  * Debug
@@ -34,6 +35,35 @@ const textureLoader = new THREE.TextureLoader();
 const gradientTexture = textureLoader.load("textures/gradients/3.jpg");
 gradientTexture.magFilter = THREE.NearestFilter;
 //Material
+//env Map
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+
+const environmentMapTexture = cubeTextureLoader.load([
+  "/textures/envMap/px.png",
+  "/textures/envMap/nx.png",
+  "/textures/envMap/py.png",
+  "/textures/envMap/ny.png",
+  "/textures/envMap/pz.png",
+  "/textures/envMap/nz.png",
+]);
+
+//mat2
+const material2 = new THREE.MeshPhysicalMaterial({
+  color: 0xffffff,
+  transparent: true,
+  opacity: 7,
+  roughness: 0.1,
+  metalness: 0.3,
+  clearcoat: 1.0,
+  clearcoatRoughness: 0.5,
+  transmission: 1.0,
+  envMap: environmentMapTexture,
+  envMapIntensity: 5.0,
+});
+
+material2.depthTest = true;
+material2.depthWrite = false;
+material2.renderOrder = 1;
 
 const material = new THREE.MeshToonMaterial({
   color: parameters.materialColor,
@@ -45,7 +75,7 @@ const objectsDistance = 4;
 
 const mesh1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.4, 16, 60), material);
 
-const mesh2 = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 32), material);
+const mesh2 = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 32), material2);
 
 const mesh3 = new THREE.Mesh(
   new THREE.TorusKnotGeometry(0.8, 0.35, 100, 16),
@@ -163,11 +193,26 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
  */
 let scrollY = window.scrollY;
 let previousTime = 0;
-let rotationSpeed = 0;
+
+let currentSection = 0;
 
 window.addEventListener("scroll", () => {
   //   previousScrollY = scrollY;
   scrollY = window.scrollY;
+
+  const newSection = Math.round(scrollY / sizes.height);
+
+  if (newSection != currentSection) {
+    currentSection = newSection;
+
+    gsap.to(sectionMeshes[currentSection].rotation, {
+      duration: 1.5,
+      ease: "power2.inOut",
+      x: "+=6",
+      y: "+=3",
+      z: "+=1.5",
+    });
+  }
 });
 
 /**
@@ -204,10 +249,10 @@ const tick = () => {
   cameraGroup.position.y +=
     (parallaxY - cameraGroup.position.y) * 3 * deltaTime;
 
-  //Update Objects
+  //Update Meshes
   for (const mesh of sectionMeshes) {
-    mesh.rotation.x = elapsedTime * 0.1;
-    mesh.rotation.y = elapsedTime * 0.12;
+    mesh.rotation.x += deltaTime * 0.1;
+    mesh.rotation.y += deltaTime * 0.12;
   }
 
   // Rotating particles
