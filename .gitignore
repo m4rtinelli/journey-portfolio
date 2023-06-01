@@ -1,0 +1,19 @@
+# Arquivos e pastas gerados pela plataforma Node.js
+node_modules/
+package-lock.json
+
+# Arquivos gerados pela plataforma Yarn
+yarn.lock
+
+# Arquivos gerados pelo bundler Parcel
+.cache/
+
+# Arquivos gerados pelo bundler Webpack
+dist/
+build/
+
+# Arquivos gerados por editores de código
+.vscode/
+.idea/
+
+# Outros arquivos e pastas específicos do seu projeto
